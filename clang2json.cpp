@@ -67,9 +67,11 @@ public:
    CXType pointee_type;
    string pointee_type_name;
    string pointee_type_usr;
+   CXCursor canonical_cursor;
 
    TypeData(CXType type) {
       this->type = clang_getCanonicalType(type);
+      canonical_cursor = clang_getTypeDeclaration(this->type);
       type_name = to_s_and_dispose(clang_getTypeSpelling(type));
       type_usr = to_s_and_dispose(clang_getCursorUSR(clang_getTypeDeclaration(type)));
       type_is_pointer = type.kind == CXTypeKind::CXType_Pointer;
@@ -202,7 +204,10 @@ CXChildVisitResult visitNamespace(CXCursor cursor, CXCursor parent, Context* con
    return CXChildVisitResult::CXChildVisit_Continue;
 }
 
+#include <vector>
 CXChildVisitResult visitTypeDecl(string kind, CXCursor cursor, CXCursor parent, Context* context) {
+   static vector<string> visited_usrs;
+
    string name;
    string usr;
    TypeData type_data(clang_getCursorType(cursor));
@@ -225,6 +230,24 @@ CXChildVisitResult visitTypeDecl(string kind, CXCursor cursor, CXCursor parent, 
       usr = type_data.type_usr;
    }
 
+   /* Types tend to be declared multiple times via forward declarations, typedefs, and actual definitions.
+    * We don't want to print the type every time we see it. Rather, the first time we see it, we want
+    * to get the canonical type (the actual definition), print the type information, and then ignore
+    * it if we see it again.
+    *
+    * So, we store the usr's we've already seen and ignore them thereafter.
+    *
+    * Not that it is very common to have a type declaration or typedef and an actual type definition
+    * immediately follow one another. To optimize for this case, we search the list of visited usr's
+    * in reverse order.
+    */
+   for (auto it = visited_usrs.rbegin(); it != visited_usrs.rend(); it++) {
+      if (*it == usr) {
+         return CXChildVisitResult::CXChildVisit_Continue;
+      }
+   }
+   visited_usrs.push_back(usr);
+
    START_JSON
       JSON_STRING("kind", kind)
       JSON_STRING("name", name)
@@ -237,7 +260,11 @@ CXChildVisitResult visitTypeDecl(string kind, CXCursor cursor, CXCursor parent, 
    END_JSON
 
    context->nested_types.push_back(usr);
-   clang_visitChildren(cursor, visit, context);
+   /* Use the canonical cursor so we can be sure to pick up the fields correctly,
+    * otherwise we might recurse over a typedef like `typedef mystruct mystruct;`
+    * and miss all the good bits. (recall that we'll only visit a type once: see above)
+    */
+   clang_visitChildren(type_data.canonical_cursor, visit, context);
    context->nested_types.pop_back();
 
    return CXChildVisitResult::CXChildVisit_Continue;
