@@ -1,3 +1,5 @@
+#define _CRT_SECURE_NO_WARNINGS
+
 #include <iostream>
 #include <string>
 #include <deque>
@@ -92,13 +94,31 @@ public:
    unsigned int line;
    unsigned int column;
    unsigned int offset;
+   unsigned int length;
 
    LocationDescription(CXCursor cursor) {
       CXSourceLocation location = clang_getCursorLocation(cursor);
       CXFile cxFile;
       clang_getFileLocation(location, &cxFile, &line, &column, &offset);
+      CXSourceRange extent = clang_getCursorExtent(cursor);
+      CXSourceLocation endLocation = clang_getRangeEnd(extent);
+      unsigned int endOffset;
+      clang_getFileLocation(endLocation, NULL, NULL, NULL, &endOffset);
+      length = endOffset - offset;
+
       cxsFile = clang_getFileName(cxFile);
       file = clang_getCString(cxsFile);
+   }
+
+   string read() {
+      FILE* f = fopen(file, "r");
+      char* buf = (char*)malloc(sizeof(char) * (length + 1));
+      fseek(f, offset, SEEK_SET);
+      fread(buf, length, 1, f);
+      buf[length] = '\0';
+      string result(buf, length);
+      free(buf);
+      return result;
    }
 
    ~LocationDescription() {
@@ -182,12 +202,64 @@ CXChildVisitResult visitTypedefDecl(CXCursor cursor, CXCursor parent, Context* c
    return CXChildVisitResult::CXChildVisit_Recurse;
 }
 
+string expand_escapes(const char* src)
+{
+   char c;
+   string result = "";
+
+   while (c = *(src++)) {
+      switch (c) {
+      case '\a':
+         result += '\\';
+         result += 'a';
+         break;
+      case '\b':
+         result += '\\';
+         result += 'b';
+         break;
+      case '\t':
+         result += '\\';
+         result += 't';
+         break;
+      case '\n':
+         result += '\\';
+         result += 'n';
+         break;
+      case '\v':
+         result += '\\';
+         result += 'v';
+         break;
+      case '\f':
+         result += '\\';
+         result += 'f';
+         break;
+      case '\r':
+         result += '\\';
+         result += 'r';
+         break;
+      case '\\':
+         result += '\\';
+         result += '\\';
+         break;
+      case '\"':
+         result += '\\';
+         result += '\"';
+         break;
+      default:
+         result += c;
+      }
+   }
+   return result;
+}
+
 CXChildVisitResult visitMacroDefinition(CXCursor cursor, CXCursor parent, Context* context) {
    string macro = to_s_and_dispose(clang_getCursorSpelling(cursor));
+   LocationDescription location(cursor);
 
    START_JSON
       JSON_STRING("kind", "MacroDefinition")
       JSON_STRING("name", macro)
+      JSON_STRING("text", expand_escapes(location.read().c_str()))
    END_JSON
 
    return CXChildVisitResult::CXChildVisit_Recurse;
