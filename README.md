@@ -3,7 +3,7 @@ Dump type information from C headers to line delimited json via libclang
 
 ## Features
 - Reads declarations of classes, structs, fields, functions, parameters, macros, typedefs, etc., from header files.
-- Prints the declaration information complete with type data to a line-delimited json file.
+- Prints the declaration information complete with type data as line-delimited json.
 - The output is suitable for use in code generators (say for [generating mruby bindings](https://github.com/jbreeden/mruby-bindings))
   or whatever else you may need the type information of a library for.
   
