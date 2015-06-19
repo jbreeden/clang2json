@@ -8,10 +8,6 @@
 
 using namespace std;
 
-/* TODO
- * - only output a single canonical type once
- */
-
 class Context;
 class ReturnData;
 class LocationDescription;
