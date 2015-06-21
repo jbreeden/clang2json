@@ -1,5 +1,6 @@
 #define _CRT_SECURE_NO_WARNINGS
 
+#include <stdio.h>
 #include <iostream>
 #include <string>
 #include <deque>
@@ -9,7 +10,6 @@
 using namespace std;
 
 class Context;
-class ReturnData;
 class LocationDescription;
 
 string to_s_and_dispose(CXString cxString);
@@ -72,8 +72,7 @@ public:
       canonical_cursor = clang_getTypeDeclaration(this->type);
       type_name = to_s_and_dispose(clang_getTypeSpelling(type));
       type_usr = to_s_and_dispose(clang_getCursorUSR(clang_getTypeDeclaration(type)));
-      type_is_pointer = type.kind == CXTypeKind::CXType_Pointer;
-      pointee_type;
+      type_is_pointer = type.kind == CXType_Pointer;
       pointee_type_name = "";
       pointee_type_usr = "";
       if (type_is_pointer) {
@@ -195,7 +194,7 @@ CXChildVisitResult visitTypedefDecl(CXCursor cursor, CXCursor parent, Context* c
       JSON_TYPE_DATA("underlying_type", underlying_type_data)
    END_JSON
 
-   return CXChildVisitResult::CXChildVisit_Recurse;
+   return CXChildVisit_Recurse;
 }
 
 string expand_escapes(const char* src)
@@ -203,7 +202,7 @@ string expand_escapes(const char* src)
    char c;
    string result = "";
 
-   while (c = *(src++)) {
+   while ((c = *(src++))) {
       switch (c) {
       case '\a':
          result += '\\';
@@ -258,7 +257,7 @@ CXChildVisitResult visitMacroDefinition(CXCursor cursor, CXCursor parent, Contex
       JSON_STRING("text", expand_escapes(location.read().c_str()))
    END_JSON
 
-   return CXChildVisitResult::CXChildVisit_Recurse;
+   return CXChildVisit_Recurse;
 }
 
 CXChildVisitResult visitNamespace(CXCursor cursor, CXCursor parent, Context* context) {
@@ -269,7 +268,7 @@ CXChildVisitResult visitNamespace(CXCursor cursor, CXCursor parent, Context* con
    clang_visitChildren(cursor, visit, context);
    context->nested_namespaces.pop_back();
 
-   return CXChildVisitResult::CXChildVisit_Continue;
+   return CXChildVisit_Continue;
 }
 
 #include <vector>
@@ -279,13 +278,13 @@ CXChildVisitResult visitTypeDecl(string kind, CXCursor cursor, CXCursor parent, 
    string name;
    string usr;
    TypeData type_data(clang_getCursorType(cursor));
-   if (cursor.kind == CXCursorKind::CXCursor_ClassTemplate) {
+   if (cursor.kind == CXCursor_ClassTemplate) {
       // The type spelling is blank for templates, since they aren't a real type yet (I guess).
-      // 
+      //
       // The cursor spelling *usually* works for non-template types as well, except those that are anonymous.
       // For example, the following declaration would give an empty cursor spelling, but the correct type spelling:
-      //  ``` 
-      //  typedef struct { 
+      //  ```
+      //  typedef struct {
       //     int some_int;
       //   } my_struct;
       //  ```
@@ -309,9 +308,9 @@ CXChildVisitResult visitTypeDecl(string kind, CXCursor cursor, CXCursor parent, 
     * immediately follow one another. To optimize for this case, we search the list of visited usr's
     * in reverse order.
     */
-   for (auto it = visited_usrs.rbegin(); it != visited_usrs.rend(); it++) {
+   for (vector<string>::reverse_iterator it = visited_usrs.rbegin(); it != visited_usrs.rend(); it++) {
       if (*it == usr) {
-         return CXChildVisitResult::CXChildVisit_Continue;
+         return CXChildVisit_Continue;
       }
    }
    visited_usrs.push_back(usr);
@@ -335,7 +334,7 @@ CXChildVisitResult visitTypeDecl(string kind, CXCursor cursor, CXCursor parent, 
    clang_visitChildren(type_data.canonical_cursor, visit, context);
    context->nested_types.pop_back();
 
-   return CXChildVisitResult::CXChildVisit_Continue;
+   return CXChildVisit_Continue;
 }
 
 CXChildVisitResult visitClassTemplate(CXCursor cursor, CXCursor parent, Context* context) {
@@ -363,7 +362,7 @@ CXChildVisitResult visitEnumConstantDecl(CXCursor cursor, CXCursor parent, Conte
       JSON_STRING("usr", usr)
    END_JSON
 
-   return CXChildVisitResult::CXChildVisit_Recurse;
+   return CXChildVisit_Recurse;
 }
 
 CXChildVisitResult visitClassDecl(CXCursor cursor, CXCursor parent, Context* context) {
@@ -387,7 +386,7 @@ CXChildVisitResult visitCXXBaseSpecifier(CXCursor cursor, CXCursor parent, Conte
       JSON_STRING("child_usr", context->current_type())
    END_JSON
 
-   return CXChildVisitResult::CXChildVisit_Recurse;
+   return CXChildVisit_Recurse;
 }
 
 CXChildVisitResult visitCXXMethod(CXCursor cursor, CXCursor parent, Context* context) {
@@ -401,15 +400,18 @@ CXChildVisitResult visitCXXMethod(CXCursor cursor, CXCursor parent, Context* con
       JSON_STRING("name", method_name)
       JSON_TYPE_DATA("return_type", return_type_data)
       switch (access) {
-      case CX_CXXAccessSpecifier::CX_CXXPrivate:
+      case CX_CXXPrivate:
          JSON_STRING("access", "private")
          break;
-      case CX_CXXAccessSpecifier::CX_CXXPublic:
+      case CX_CXXPublic:
          JSON_STRING("access", "public")
          break;
-      case CX_CXXAccessSpecifier::CX_CXXProtected:
+      case CX_CXXProtected:
          JSON_STRING("access", "protected")
          break;
+      case CX_CXXInvalidAccessSpecifier:
+        JSON_STRING("access", "invalid")
+        break;
       }
       if (clang_CXXMethod_isVirtual(cursor)) {
          JSON_VALUE("is_virtual", "true")
@@ -421,7 +423,7 @@ CXChildVisitResult visitCXXMethod(CXCursor cursor, CXCursor parent, Context* con
       JSON_STRING("usr", usr)
    END_JSON
 
-   return CXChildVisitResult::CXChildVisit_Recurse;
+   return CXChildVisit_Recurse;
 }
 
 CXChildVisitResult visitFunctionDecl(CXCursor cursor, CXCursor parent, Context* context) {
@@ -437,7 +439,7 @@ CXChildVisitResult visitFunctionDecl(CXCursor cursor, CXCursor parent, Context* 
       JSON_STRING("usr", usr)
       END_JSON
 
-      return CXChildVisitResult::CXChildVisit_Recurse;
+      return CXChildVisit_Recurse;
 }
 
 CXChildVisitResult visitParmDecl(CXCursor cursor, CXCursor parent, Context* context) {
@@ -451,7 +453,7 @@ CXChildVisitResult visitParmDecl(CXCursor cursor, CXCursor parent, Context* cont
       JSON_TYPE_DATA("type", type_data)
    END_JSON
 
-   return CXChildVisitResult::CXChildVisit_Recurse;
+   return CXChildVisit_Recurse;
 }
 
 CXChildVisitResult visitFieldDecl(CXCursor cursor, CXCursor parent, Context* context) {
@@ -465,76 +467,81 @@ CXChildVisitResult visitFieldDecl(CXCursor cursor, CXCursor parent, Context* con
       JSON_STRING("name", field_name)
       JSON_TYPE_DATA("type", type_data)
       switch (access) {
-      case CX_CXXAccessSpecifier::CX_CXXPrivate:
+      case CX_CXXPrivate:
          JSON_STRING("access", "private")
             break;
-      case CX_CXXAccessSpecifier::CX_CXXPublic:
+      case CX_CXXPublic:
          JSON_STRING("access", "public")
             break;
-      case CX_CXXAccessSpecifier::CX_CXXProtected:
+      case CX_CXXProtected:
          JSON_STRING("access", "protected")
             break;
+      case CX_CXXInvalidAccessSpecifier:
+        JSON_STRING("access", "invalid")
+        break;
       }
       JSON_STRING("member_of", context->current_type())
       JSON_STRING("usr", usr)
    END_JSON
 
-   return CXChildVisitResult::CXChildVisit_Recurse;
+   return CXChildVisit_Recurse;
 }
 
 CXChildVisitResult visit(CXCursor cursor, CXCursor parent, CXClientData data) {
    if (!clang_Location_isFromMainFile(clang_getCursorLocation(cursor))) {
-      return CXChildVisitResult::CXChildVisit_Continue;
+      return CXChildVisit_Continue;
    }
 
    Context* context = (Context*)data;
 
-   CXChildVisitResult result = CXChildVisitResult::CXChildVisit_Recurse;
+   CXChildVisitResult result = CXChildVisit_Recurse;
 
    switch (cursor.kind) {
-   case CXCursorKind::CXCursor_TypedefDecl:
+   case CXCursor_TypedefDecl:
       result = visitTypedefDecl(cursor, parent, context);
       break;
-   case CXCursorKind::CXCursor_MacroDefinition:
+   case CXCursor_MacroDefinition:
       result = visitMacroDefinition(cursor, parent, context);
       break;
-   case CXCursorKind::CXCursor_Namespace:
+   case CXCursor_Namespace:
       result = visitNamespace(cursor, parent, context);
       break;
-   case CXCursorKind::CXCursor_ClassTemplate:
+   case CXCursor_ClassTemplate:
       result = visitClassTemplate(cursor, parent, context);
       break;
-   case CXCursorKind::CXCursor_UnionDecl:
+   case CXCursor_UnionDecl:
       result = visitUnionDecl(cursor, parent, context);
       break;
-   case CXCursorKind::CXCursor_EnumDecl:
+   case CXCursor_EnumDecl:
       result = visitEnumDecl(cursor, parent, context);
       break;
-   case CXCursorKind::CXCursor_EnumConstantDecl:
+   case CXCursor_EnumConstantDecl:
       result = visitEnumConstantDecl(cursor, parent, context);
       break;
-   case CXCursorKind::CXCursor_ClassDecl:
+   case CXCursor_ClassDecl:
       result = visitClassDecl(cursor, parent, context);
       break;
-   case CXCursorKind::CXCursor_StructDecl:
+   case CXCursor_StructDecl:
       result = visitStructDecl(cursor, parent, context);
       break;
    // TODO: Base Specifier is never being hit for some reason.
-   case CXCursorKind::CXCursor_CXXBaseSpecifier:
+   case CXCursor_CXXBaseSpecifier:
       result = visitCXXBaseSpecifier(cursor, parent, context);
       break;
-   case CXCursorKind::CXCursor_FieldDecl:
+   case CXCursor_FieldDecl:
       result = visitFieldDecl(cursor, parent, context);
       break;
-   case CXCursorKind::CXCursor_CXXMethod:
+   case CXCursor_CXXMethod:
       result = visitCXXMethod(cursor, parent, context);
       break;
-   case CXCursorKind::CXCursor_FunctionDecl:
+   case CXCursor_FunctionDecl:
       result = visitFunctionDecl(cursor, parent, context);
       break;
-   case CXCursorKind::CXCursor_ParmDecl:
+   case CXCursor_ParmDecl:
       result = visitParmDecl(cursor, parent, context);
       break;
+   default:
+      ; /* Ignore cursors we don't care about */
    }
 
    return result;
