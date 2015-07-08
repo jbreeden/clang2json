@@ -8,7 +8,7 @@ Dump type information from C headers to line delimited json via libclang
   or whatever else you may need the type information from a library for.
   
 ## Output Format
-Not _stictly_ defined at the moment. Have a look at [libapr.json](https://github.com/jbreeden/clang2json/blob/master/libapr.json) for an example.
+Not _stictly_ defined at the moment. Have a look at [apr.json](https://github.com/jbreeden/clang2json/blob/master/apr.json) for an example.
 If this doesn't do it for you... the code is short and simple. Just loook at the use of the JSON_* macros and you'll see exactly
 what is output for all of the various "entities" (structs, classes, parameters...).
 

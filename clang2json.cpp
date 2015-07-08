@@ -1,6 +1,6 @@
 #define _CRT_SECURE_NO_WARNINGS
 
-#include <stdio.h>
+#include <cstdio>
 #include <iostream>
 #include <string>
 #include <deque>
