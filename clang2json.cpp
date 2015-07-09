@@ -553,7 +553,7 @@ int main(int argc, char** argv) {
 
    if (argc == 1 || (argc == 2 && 0 == strcmp(argv[1], "--help"))) {
      printf(
-       "Usage:\n"
+       "Usage\n"
        "  clang2json [CLANG_OPTIONS]... FILE\n"
        "\n"
        "Options\n"
@@ -564,6 +564,11 @@ int main(int argc, char** argv) {
        "\n"
        "  FILE\n"
        "    The file to convert.\n"
+       "\n"
+       "Example\n"
+       "  # Analyze multiple files, appending the declarations into a single file to process later\n"
+       "  clang2json -x c++ apr.h > declations.json\n"
+       "  clang2json -x c++ apr_file_io.h >> declarations.json\n"
      );
      exit(0);
    }

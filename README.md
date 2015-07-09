@@ -1,12 +1,34 @@
 # clang2json
 Dump type information from C headers to line delimited json via libclang
 
+## Usage
+
+```
+[jared:~/projects/clang2json] ./build/clang2json --help
+Usage
+  clang2json [CLANG_OPTIONS]... FILE
+
+Options
+  CLANG_OPTIONS
+    Same options you would pass to clang to compile this file.
+    Ex: `-x c++` will tell clang this is a c++ file, not c.
+    See `clang --help` or `man clang` for more information.
+
+  FILE
+    The file to convert.
+
+Example
+  # Analyze multiple files, appending the declarations into a single file to process later
+  clang2json -x c++ apr.h > declations.json
+  clang2json -x c++ apr_file_io.h >> declarations.json
+```
+
 ## Features
 - Reads declarations of classes, structs, fields, functions, parameters, macros, typedefs, etc., from header files.
 - Prints the declaration information complete with type data as line-delimited json.
 - The output is suitable for use in code generators (say for [generating mruby bindings](https://github.com/jbreeden/mruby-bindings))
   or whatever else you may need the type information from a library for.
-  
+
 ## Output Format
 Not _stictly_ defined at the moment. Have a look at [apr.json](https://github.com/jbreeden/clang2json/blob/master/apr.json) for an example.
 If this doesn't do it for you... the code is short and simple. Just loook at the use of the JSON_* macros and you'll see exactly
@@ -14,11 +36,11 @@ what is output for all of the various "entities" (structs, classes, parameters..
 
 ## Cross Referencing
 Most entities are uniquely identified by their 'usr' (Unified Symbol Resolution). These usr's are used to specify references
-between related entities (Notable exception: parameters don't yet have this cross reference. They simply appear after the 
-function they belong to. This will be fixed at some point, but for the time being it suffices to track the lasted encountered 
+between related entities (Notable exception: parameters don't yet have this cross reference. They simply appear after the
+function they belong to. This will be fixed at some point, but for the time being it suffices to track the lasted encountered
 function and associate any paramters with that function.).
 
-For example, a FieldDecl will have a 'member_of' property containing its parent StructDecl's usr. These usr references can 
+For example, a FieldDecl will have a 'member_of' property containing its parent StructDecl's usr. These usr references can
 be used to construct a graph of the entities, similar to an AST.
 
 The main differences between the data provided by clang2json (once graphed) and an actual AST are that
