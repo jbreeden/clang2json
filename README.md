@@ -4,7 +4,7 @@ Dump type information from C headers to line delimited json via libclang
 ## Usage
 
 ```
-[jared:~/projects/clang2json] ./build/clang2json --help
+[jared:~/projects/clang2json] ./build/clang2json
 Usage
   clang2json [CLANG_OPTIONS]... FILE
 
@@ -18,9 +18,10 @@ Options
     The file to convert.
 
 Example
-  # Analyze multiple files, appending the declarations into a single file to process later
-  clang2json -x c++ apr.h > declations.json
-  clang2json -x c++ apr_file_io.h >> declarations.json
+  # Analyze multiple files, appending the declarations into a single file.
+  # This can (and probably should) be scripted if a large number of files are needed.
+  clang2json -x c++ -I apr-1.5.1 apr-1.5.1/apr.h > declations.json
+  clang2json -x c++ -I apr-1.5.1 apr-1.5.1/apr_file_io.h >> declarations.json
 ```
 
 ## Features

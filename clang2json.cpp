@@ -566,9 +566,10 @@ int main(int argc, char** argv) {
        "    The file to convert.\n"
        "\n"
        "Example\n"
-       "  # Analyze multiple files, appending the declarations into a single file to process later\n"
-       "  clang2json -x c++ apr.h > declations.json\n"
-       "  clang2json -x c++ apr_file_io.h >> declarations.json\n"
+       "  # Analyze multiple files, appending the declarations into a single file.\n"
+       "  # This can (and probably should) be scripted if a large number of files are needed.\n"
+       "  clang2json -x c++ -I apr-1.5.1 apr-1.5.1/apr.h > declations.json\n"
+       "  clang2json -x c++ -I apr-1.5.1 apr-1.5.1/apr_file_io.h >> declarations.json\n"
      );
      exit(0);
    }
