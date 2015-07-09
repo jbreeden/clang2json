@@ -551,6 +551,23 @@ int main(int argc, char** argv) {
    Context context;
    CXIndex index = clang_createIndex(0, 0);
 
+   if (argc == 1 || (argc == 2 && 0 == strcmp(argv[1], "--help"))) {
+     printf(
+       "Usage:\n"
+       "  clang2json [CLANG_OPTIONS]... FILE\n"
+       "\n"
+       "Options\n"
+       "  CLANG_OPTIONS\n"
+       "    Same options you would pass to clang to compile this file.\n"
+       "    Ex: `-x c++` will tell clang this is a c++ file, not c.\n"
+       "    See `clang --help` or `man clang` for more information.\n"
+       "\n"
+       "  FILE\n"
+       "    The file to convert.\n"
+     );
+     exit(0);
+   }
+
    context.translation_unit = clang_parseTranslationUnit(index, 0, argv, argc, 0, 0, CXTranslationUnit_DetailedPreprocessingRecord);
 
    if (NULL == context.translation_unit) {
