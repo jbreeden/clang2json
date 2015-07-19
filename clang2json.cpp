@@ -107,12 +107,17 @@ public:
 
    string read() {
       FILE* f = fopen(file, "r");
+      if (f == NULL) {
+        fprintf(stderr, "%s %s\n", "Could not open file ", file);
+        exit(1);
+      }
       char* buf = (char*)malloc(sizeof(char) * (length + 1));
       fseek(f, offset, SEEK_SET);
       fread(buf, length, 1, f);
       buf[length] = '\0';
       string result(buf, length);
       free(buf);
+      fclose(f);
       return result;
    }
 
