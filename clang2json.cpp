@@ -37,6 +37,7 @@ public:
     */
    CXTranslationUnit translation_unit;
    deque<string> nested_namespaces;
+   deque<string> nested_functions;
    deque<string> nested_types;
 
    string current_namespace() {
@@ -45,6 +46,14 @@ public:
       }
 
       return nested_namespaces.back();
+   }
+
+   string current_function() {
+      if (nested_functions.empty()) {
+         return "";
+      }
+
+      return nested_functions.back();
    }
 
    string current_type() {
@@ -442,9 +451,13 @@ CXChildVisitResult visitFunctionDecl(CXCursor cursor, CXCursor parent, Context* 
       JSON_TYPE_DATA("return_type", return_type_data)
       JSON_STRING("namespace", context->current_namespace())
       JSON_STRING("usr", usr)
-      END_JSON
+   END_JSON
 
-      return CXChildVisit_Recurse;
+   context->nested_functions.push_back(usr);
+   clang_visitChildren(cursor, visit, context);
+   context->nested_functions.pop_back();
+
+   return CXChildVisit_Continue;
 }
 
 CXChildVisitResult visitParmDecl(CXCursor cursor, CXCursor parent, Context* context) {
@@ -452,13 +465,19 @@ CXChildVisitResult visitParmDecl(CXCursor cursor, CXCursor parent, Context* cont
    CXType type = clang_getCanonicalType(clang_getCursorType(cursor));
    TypeData type_data(type);
 
+   if (!(context->nested_functions.size() > 0)) {
+     /* Shouldn't be seeing a param now... */
+     return CXChildVisit_Continue;
+   }
+
    START_JSON
       JSON_STRING("kind", "ParmDecl")
       JSON_STRING("name", param_name)
+      JSON_STRING("function", context->current_function())
       JSON_TYPE_DATA("type", type_data)
    END_JSON
 
-   return CXChildVisit_Recurse;
+   return CXChildVisit_Continue;
 }
 
 CXChildVisitResult visitFieldDecl(CXCursor cursor, CXCursor parent, Context* context) {
