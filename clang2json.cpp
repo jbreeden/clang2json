@@ -27,7 +27,7 @@ CXChildVisitResult visitClassDecl(CXCursor cursor, CXCursor parent, Context* con
 CXChildVisitResult visitStructDecl(CXCursor cursor, CXCursor parent, Context* context);
 CXChildVisitResult visitCXXBaseSpecifier(CXCursor cursor, CXCursor parent, Context* context);
 CXChildVisitResult visitCXXMethod(CXCursor cursor, CXCursor parent, Context* context);
-CXChildVisitResult visitParmDecl(CXCursor cursor, CXCursor parent, Context* context);
+CXChildVisitResult visitParamDecl(CXCursor cursor, CXCursor parent, Context* context);
 CXChildVisitResult visitFieldDecl(CXCursor cursor, CXCursor parent, Context* context);
 
 class Context {
@@ -460,9 +460,9 @@ CXChildVisitResult visitFunctionDecl(CXCursor cursor, CXCursor parent, Context* 
    return CXChildVisit_Continue;
 }
 
-CXChildVisitResult visitParmDecl(CXCursor cursor, CXCursor parent, Context* context) {
+CXChildVisitResult visitParamDecl(CXCursor cursor, CXCursor parent, Context* context) {
    string param_name = to_s_and_dispose(clang_getCursorSpelling(cursor));
-   CXType type = clang_getCanonicalType(clang_getCursorType(cursor));
+   CXType type = clang_getCursorType(cursor);
    TypeData type_data(type);
 
    if (!(context->nested_functions.size() > 0)) {
@@ -562,7 +562,7 @@ CXChildVisitResult visit(CXCursor cursor, CXCursor parent, CXClientData data) {
       result = visitFunctionDecl(cursor, parent, context);
       break;
    case CXCursor_ParmDecl:
-      result = visitParmDecl(cursor, parent, context);
+      result = visitParamDecl(cursor, parent, context);
       break;
    default:
       ; /* Ignore cursors we don't care about */
