@@ -444,6 +444,7 @@ CXChildVisitResult visitFunctionDecl(CXCursor cursor, CXCursor parent, Context* 
    string name = to_s_and_dispose(clang_getCursorSpelling(cursor));
    TypeData return_type_data(clang_getCursorResultType(cursor));
    string usr = getCursorUSRString(cursor);
+   CXLinkageKind linkage = clang_getCursorLinkage(cursor);
 
    START_JSON
       JSON_STRING("kind", "FunctionDecl")
@@ -451,6 +452,23 @@ CXChildVisitResult visitFunctionDecl(CXCursor cursor, CXCursor parent, Context* 
       JSON_TYPE_DATA("return_type", return_type_data)
       JSON_STRING("namespace", context->current_namespace())
       JSON_STRING("usr", usr)
+      switch (linkage) {
+      case CXLinkage_Invalid:
+        JSON_STRING("linkage", "invalid");
+        break;
+      case CXLinkage_NoLinkage:
+        JSON_STRING("linkage", "no-linkage");
+        break;
+      case CXLinkage_Internal:
+        JSON_STRING("linkage", "internal");
+        break;
+      case CXLinkage_UniqueExternal:
+        JSON_STRING("linkage", "unique-external");
+        break;
+      case CXLinkage_External:
+        JSON_STRING("linkage", "external");
+        break;
+      }
    END_JSON
 
    context->nested_functions.push_back(usr);
