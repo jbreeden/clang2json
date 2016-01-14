@@ -1,5 +1,10 @@
 # clang2json
-Dump type information from C headers to line delimited json via libclang
+
+Dump type information from C headers and source files to line delimited json via libclang.
+
+# Why?
+
+For easy machine consumption in any language/program that understands JSON. Especially intended for bindings generators.
 
 ## Usage
 
@@ -24,20 +29,18 @@ Example
   clang2json -x c++ -I apr-1.5.1 apr-1.5.1/apr_file_io.h >> declarations.json
 ```
 
-## Features
-- Reads declarations of classes, structs, fields, functions, parameters, macros, typedefs, etc., from header files.
-- Prints the declaration information complete with type data as line-delimited json.
-- The output is suitable for use in code generators (say for [generating mruby bindings](https://github.com/jbreeden/mruby-bindings))
-  or whatever else you may need the type information from a library for.
+## Example
 
-## Output Format
-Not _stictly_ defined at the moment. Have a look at [apr.json](https://github.com/jbreeden/clang2json/blob/master/apr.json) for an example.
-If this doesn't do it for you... the code is short and simple. Just loook at the use of the JSON_* macros and you'll see exactly
-what is output for all of the various "entities" (structs, classes, parameters...).
+The result of running clang2json on the Apache APR library: [apr.json](https://github.com/jbreeden/clang2json/blob/master/apr.json)
+
+## Spec
+
+Just loook at the use of the JSON_* macros and you'll see exactly what is output for all of the various "entities" (structs, classes, parameters, etc.). All of the source is in a single file, and outputting JSON is pretty much the only thing it does, so it should be easy to thumb through.
 
 ## Cross Referencing
-Most entities are uniquely identified by their 'usr' (Unified Symbol Resolution). These usr's are used to specify references
+
+Most entities are uniquely identified by their USR (Unified Symbol Resolution). These USRs are used to specify references
 between related entities.
 
-For example, a `FieldDecl` will have a `"member_of"` property containing its parent `StructDecl`s usr. Similarly, a `ParmDecl` has a `"function"` member containing the usr of the function it belongs to. These usr references can
-be used to construct a graph of the entities, like an AST of just type declarations.
+For example, a `FieldDecl` will have a `"member_of"` property containing its parent `StructDecl`s USR. Similarly, a `ParmDecl` has a `"function"` member containing the USR of the function it belongs to. These USR references can
+be used to construct a graph of the entities, like an AST of all type declarations from the source library.
