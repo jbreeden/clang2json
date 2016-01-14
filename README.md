@@ -4,7 +4,7 @@ Dump type information from C headers and source files to line delimited json via
 
 # Why?
 
-For easy machine consumption in any language/program that understands JSON. Especially intended for bindings generators.
+For easy machine consumption in any language/program that understands JSON. Especially intended for binding generators.
 
 ## Usage
 
