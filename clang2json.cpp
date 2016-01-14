@@ -85,7 +85,7 @@ public:
       pointee_type_name = "";
       pointee_type_usr = "";
       if (type_is_pointer) {
-         pointee_type = clang_getCanonicalType(clang_getPointeeType(type));
+         pointee_type = clang_getPointeeType(type);
          pointee_type_name = to_s_and_dispose(clang_getTypeSpelling(pointee_type));
          pointee_type_usr = to_s_and_dispose(clang_getCursorUSR(clang_getTypeDeclaration(pointee_type)));
       }
