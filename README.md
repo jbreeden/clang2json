@@ -29,10 +29,6 @@ Example
   clang2json -x c++ -I apr-1.5.1 apr-1.5.1/apr_file_io.h >> declarations.json
 ```
 
-## Example
-
-The result of running clang2json on the Apache APR library: [apr.json](https://github.com/jbreeden/clang2json/blob/master/apr.json)
-
 ## Spec
 
 Just loook at the use of the JSON_* macros and you'll see exactly what is output for all of the various "entities" (structs, classes, parameters, etc.). All of the source is in a single file, and outputting JSON is pretty much the only thing it does, so it should be easy to thumb through.

@@ -8,19 +8,15 @@ task :clean do
   rm_rf 'build' if Dir.exists? 'build'
 end
 
-namespace :build do
-  desc "Build for mac"
-  task :mac64 do
-    mkdir 'build' unless Dir.exists? 'build'
-    chdir 'build' do
-      cp '../lib/OSX_x86_64/libclang.dylib', '.'
-      sh "clang++ -I ../include -L . -o clang2json ../clang2json.cpp -lclang -Wl,-rpath,@loader_path"
-    end
-    puts "Build complete! (Take a peek in the build/ folder)"
-  end
+desc "Builds clang2json"
+task :build do
+  # Requires the libclang-dev package
+  mkdir 'build' unless Dir.exists?('build')
+  sh "clang++ `llvm-config --cflags` ./clang2json.cpp `llvm-config --ldflags` -lclang -o build/clang2json"
 end
 
-namespace :rebuild do
-  desc "Rebuild for Mac"
-  task :mac64 => ['clean', 'build:mac']
+desc "Install the executable as a symlink in /usr/local/bin"
+task :symlink do
+  sh "ln -s `pwd`/build/clang2json /usr/local/bin/clang2json"
 end
+

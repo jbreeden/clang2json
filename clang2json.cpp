@@ -1,8 +1,8 @@
 #define _CRT_SECURE_NO_WARNINGS
 
 #include <cstdio>
+#include <cstring>
 #include <iostream>
-#include <string>
 #include <deque>
 #include <algorithm>
 #include "clang-c/Index.h"
